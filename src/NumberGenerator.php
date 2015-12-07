@@ -15,6 +15,11 @@ class NumberGenerator {
 
     /**
      * Takes an array of numbers to filter
+     * For every number in our list
+     * convert that number to a string and find its length
+     * check to see if our string is too small // too big and skip it if so
+     * send the number to be parsed
+     * if we got a valid lotto number back add it to our list of numbers
      * @param array $nums
      * @return $this
      */
@@ -47,6 +52,13 @@ class NumberGenerator {
 
     /**
      * Parses an individual number
+     * Initialize our step and current lotto number we are working on
+     * While we dont have a full lotto number AND we havn't run out of numbers to make one with
+     * Get a suggested number
+     * If its valid push it onto our stack of numbers 
+     * If we complete WITHOUT 7 number OR with numbers left over we failed 
+     * Remove leading 0's 
+     * Final Sanity Check we have exactly 7 numbers and return our imploeded string
      * @param $num
      * @param $len
      * @return bool|string
@@ -92,6 +104,9 @@ class NumberGenerator {
 
     /**
      * Adds a number to our list and removes used items
+     * Shift the proposed number off the active number string
+     * Add the propsoed number to our list of numbers
+     * return the mutated data
      * @param $num
      * @param $proposed_num
      * @param array $current_nums
@@ -109,6 +124,21 @@ class NumberGenerator {
     /**
      * Tries its best to find a valid number
      * Returns false on failure
+     *
+     * Update the length of the working number, and how many numbers we have so far
+     * IF the lenght of our string + the current numbers have is exactly 7 - override what ever step is and force a step of 1
+     * 
+     * While the number we generated is not valid TRY AGAIN WITH VIGOR 
+     * if our number is false - we failed
+     * remove all LEADING 0's before actually trying
+     * Check all our edge cases which preclude us wanting to take a single step
+     * IF after all that our number is a duplicate 
+     * TRY ONE LAST TIME else throw an error and break
+     *
+     * update the last generate number to make sure we know when we get stuck
+     *
+     * return the number or false on failure
+     *
      * @param $num
      * @param $step
      * @param $current
@@ -165,10 +195,19 @@ class NumberGenerator {
         return  $error ? false : [ $num, $proposed_num] ;
     }
 
+    /**
+     * Validates a number against the current lotto numbers and general lotto rules
+     * @param $num
+     * @param $current
+     */
     protected function isValid($num, $current) { 
         return !isset($current[$num]) && ($num >= 1 && $num <= 59);
     }
 
+    /**
+     * Adds a number to our list
+     * @param $current_nums
+     */
     protected function addNumber($current_nums) { 
         array_push($this->lotto_numbers, $current_nums);
         return $this;

@@ -42,7 +42,7 @@ class LottoTest extends PHPUnit_Framework_TestCase {
             $nums[] = (string)mt_rand(1,999999999999999);
         }
 
-        // aparently we expect on average about 100 rows - so lets be conservative
+        // aparently we expect on average about 150 rows - so lets be conservative
         $results = $this->gen->parseNumbers($nums)
             ->getNumbers();
         $expected = ceil((100*100)/count($nums));
