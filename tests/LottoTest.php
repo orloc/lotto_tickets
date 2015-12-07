@@ -51,12 +51,32 @@ class LottoTest extends PHPUnit_Framework_TestCase {
         $this->assertGreaterThanOrEqual($expected, $actual);
 
         foreach ($results as $r) { 
+            $digits = [];
             $str = explode(" ", $r);
+            foreach ($str as $s) { 
+                $d = str_split($s);
+                foreach ($d as $n){
+                    $digits[$n] = false;
+                }
+            }
+
             $this->assertCount(7, $str);
             foreach ($str as $s) { 
+                $d = str_split($s);
+                foreach ($d as $n) {
+                    if (!$digits[$n]) { 
+                        $digits[$n] = true;
+                    }
+                }
+
                 $this->assertGreaterThanOrEqual(1, $s);
                 $this->assertLessThanOrEqual(59, $s);
             }
+
+            $missing = array_filter($digits, function($d) { 
+                return $d === false;
+            });
+            $this->assertCount(0, $missing);
         }
 
     }
