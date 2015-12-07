@@ -36,17 +36,19 @@ class LottoTest extends PHPUnit_Framework_TestCase {
         $this->assertCount(0, $results);
     }
 
-    /*
     public function testLargeRandomSet() { 
         $nums = [];
         for ($i = 0; $i < 20000; $i++) { 
             $nums[] = (string)mt_rand(1,999999999999999);
         }
 
+        // aparently we expect on average about 100 rows - so lets be conservative
         $results = $this->gen->parseNumbers($nums)
             ->getNumbers();
+        $expected = ceil((100*100)/count($nums));
+        $actual = ceil((count($results)*100)/count($nums));
 
-        var_dump($results);die;
+        $this->assertGreaterThanOrEqual($expected, $actual);
+
     }
-     */
 }

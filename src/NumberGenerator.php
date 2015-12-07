@@ -3,17 +3,10 @@
 namespace Lotto;
 
 class NumberGenerator { 
-    private $start;
     private $lotto_numbers;
 
     public function __construct() { 
-        $this->start = microtime(true);
         $this->lotto_numbers = [];
-    }
-
-    public function __destruct() { 
-        $time = microtime(true) - $this->start;
-        echo "Done in {$time}";
     }
 
     public function parseNumbers(array $nums) { 
@@ -30,8 +23,6 @@ class NumberGenerator {
             if ($current_nums !== false) { 
                 $this->addNumber($current_nums);
             }
-            echo "==============";
-            var_dump($this->getNumbers());
         }
 
         return $this;
@@ -61,7 +52,6 @@ class NumberGenerator {
                 list($num, $current_nums) = $this->pushNumber($num, $proposed_num, $current_nums);
             }
 
-            var_dump($current_nums);
         }
         
         if (count($current_nums) !== 7 || $num != false) { 
@@ -74,7 +64,12 @@ class NumberGenerator {
             }
         }
 
-        return implode(" ", $current_nums);
+        if (count($current_nums) === 7 ) { 
+            return implode(" ", $current_nums);
+        }
+
+        return false;
+
     }
 
     protected function pushNumber($num, $proposed_num, array $current_nums) { 
@@ -88,22 +83,28 @@ class NumberGenerator {
     
     protected function getProposedNumber($num,  $step, $current) { 
         $error = false;
-        if ( (strlen($num) + count($current)  === 7) ) { 
+        $len = strlen($num);
+        $current_count = count($current);
+        if ( ($len + $current_count  === 7) ) { 
             $proposed_num = str_split(substr($num, 0, $step))[0];
         } else {
             $proposed_num = substr($num, 0,  $step);
         }
 
-
+        $last_num = $proposed_num;
         while (!$this->isValid($proposed_num, $current) ) { 
+            if ($num === false) { 
+                break;
+            }
             while (substr($num, 0, 1) === '0') { 
                 $num = substr($num, 1);
             }
 
             if (
-                (count($current) + ceil(strlen($num) / 2) >= 7)
-                || (strlen($num) <= 5 && count($current) == 2)
-                || (strlen($num) + count($current)  === 7)
+                ($current_count + ceil($len / 2) >= 7)
+                || ($len <= 5 && $current_count == 2)
+                || ($len + $current_count  === 7)
+                || $last_num === $proposed_num
             ){
                 $proposed_num = str_split(substr($num, 0, $step))[0];
             } else {
@@ -120,9 +121,13 @@ class NumberGenerator {
                     break;
                 }
             }
+            $last_num = $proposed_num;
 
         }  
 
+        if (strlen($proposed_num) === 0 ) {
+            $error = true;
+        }
 
         return  $error ? false : [ $num, $proposed_num] ;
     }
