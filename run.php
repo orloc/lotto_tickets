@@ -17,7 +17,7 @@ require_once __DIR__.'/vendor/autoload.php';
  * Generate a decent sized list of variable sized random numbers
  */
 $nums = [];
-for ($i = 0; $i < 200000; $i++) { 
+for ($i = 0; $i < 2000; $i++) { 
     $nums[] = (string)mt_rand(1,999999999999999);
 }
         $set = [ 1, 42,100848,4938532894754,1234567,472844278465445];
@@ -26,8 +26,10 @@ for ($i = 0; $i < 200000; $i++) {
 
 $gen = new Lotto\NumberGenerator();
 
+
+$start = microtime(true);
 $results = $gen->parseNumbers(array_merge($set, $nums))
             ->getNumbers();
 
+echo microtime(true) - $start." seconds";
 
-var_dump(count($results));

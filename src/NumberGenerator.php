@@ -2,6 +2,10 @@
 
 namespace Lotto;
 
+/**
+ * Class NumberGenerator
+ * @package Lotto
+ */
 class NumberGenerator { 
     private $lotto_numbers;
 
@@ -9,6 +13,11 @@ class NumberGenerator {
         $this->lotto_numbers = [];
     }
 
+    /**
+     * Takes an array of numbers to filter
+     * @param array $nums
+     * @return $this
+     */
     public function parseNumbers(array $nums) { 
         foreach ($nums as $k => $num)  {
             $num = (string)$num;
@@ -28,10 +37,20 @@ class NumberGenerator {
         return $this;
     }
 
+    /**
+     * Returns the filtered numbers
+     * @return array
+     */
     public function getNumbers() {
         return $this->lotto_numbers;
     }
 
+    /**
+     * Parses an individual number
+     * @param $num
+     * @param $len
+     * @return bool|string
+     */
     protected function doParse($num, $len) { 
         $current_nums = [];
         $step = $len > 7 ? 2 : 1;
@@ -51,7 +70,6 @@ class NumberGenerator {
             } else {
                 list($num, $current_nums) = $this->pushNumber($num, $proposed_num, $current_nums);
             }
-
         }
         
         if (count($current_nums) !== 7 || $num != false) { 
@@ -72,6 +90,13 @@ class NumberGenerator {
 
     }
 
+    /**
+     * Adds a number to our list and removes used items
+     * @param $num
+     * @param $proposed_num
+     * @param array $current_nums
+     * @return array
+     */
     protected function pushNumber($num, $proposed_num, array $current_nums) { 
         $num = substr($num, strlen($proposed_num));
 
@@ -80,7 +105,15 @@ class NumberGenerator {
 
         return [ $num, $current_nums ];
     }
-    
+
+    /**
+     * Tries its best to find a valid number
+     * Returns false on failure
+     * @param $num
+     * @param $step
+     * @param $current
+     * @return array|bool
+     */
     protected function getProposedNumber($num,  $step, $current) { 
         $error = false;
         $len = strlen($num);
