@@ -21,7 +21,6 @@ class NumberGenerator {
             $num = (string)$num;
             $len = strlen($num);
 
-            // If the number is too small or too big - skip it
             if ($len <  7 || $len > 14) {  
                 continue; 
             }
@@ -31,6 +30,8 @@ class NumberGenerator {
             if ($current_nums !== false) { 
                 $this->addNumber($current_nums);
             }
+            echo "==============";
+            var_dump($this->getNumbers());
         }
 
         return $this;
@@ -40,83 +41,94 @@ class NumberGenerator {
         return $this->lotto_numbers;
     }
 
-    // While we do not have enough numbers 
-    // OR we ran out before we got enough ( which shouldnt happen - but its better than being stuck here forever ) 
-    // If the number is NOT a repeat
-    // remove the numbers we just added 
-    // from the string under concideration plus the additonal place skipped if any
-    // Check if we skipped a bunch of invalid numbers to get here 
-    // IF so should re-evalutate our step or break if we cant make this work
-    // add the item we havnt added yet to account for its potential
-    // continue if all hope is lost else 
-    // finish the rest of the number with this step 
     protected function doParse($num, $len) { 
         $current_nums = [];
-        $initial = 0;
         $step = $len > 7 ? 2 : 1;
 
         while (count($current_nums) !== 7 && strlen($num) !== 0) { 
-            list($proposed_num, $place, $initial) = $this->getProposedNumber($num, $initial, $step, $current_nums);
-
-            $num = substr($num, strlen($proposed_num) + $place);
-
-            if ( !isset($current_nums[$proposed_num]) ) { 
-                if ($place > $initial) { 
-                    $can_continue = count($current_nums) + 1 + strlen($num) >= 7;
-                    if (!$can_continue) { 
-                        continue;
-                    } else { 
-                        $step = 1;
-                    }
-                }
-                $current_nums[$proposed_num] = $proposed_num;
-            } else {
-                continue;
+            $data = $this->getProposedNumber($num,  $step, $current_nums);
+            if ($data === false ) { 
+                return false;
             }
+
+            list($num, $proposed_num) = $data;
+
+            if (is_array($proposed_num)) { 
+                foreach ($proposed_num as $n) { 
+                    list($num, $current_nums) = $this->pushNumber($num, $n, $current_nums);
+                }
+            } else {
+                list($num, $current_nums) = $this->pushNumber($num, $proposed_num, $current_nums);
+            }
+
+            var_dump($current_nums);
+        }
+        
+        if (count($current_nums) !== 7 || $num != false) { 
+            return false;
         }
 
-        if (count($current_nums) !== 7) { 
-            return false;
+        foreach ($current_nums as $i => $n ) { 
+            if (substr($n, 0, 1) == '0') { 
+                $current_nums[$i] = $n[1];
+            }
         }
 
         return implode(" ", $current_nums);
     }
-    
-    // Determine what step we should take 
-    // Get the next number to conscider
-    // if the number is not a valid number
-    // Check if it is 2 digits and return the first one
-    // skip ahead until we find something or run out
-    protected function getProposedNumber($num, $index, $step, $current) { 
-        if (count($current) === 6 && strlen($num) === 2 && $this->isValid($num, $current)) { 
-            $proposed_num = $num;
-        } else {
-            $proposed_num = substr($num, $index,  $step);
-            $val = function($num) { 
-                return count(array_filter(str_split($num), function($n) { 
-                    return intval($n) === 0;
-                })) <= 1;
-            };
 
-            $init_index = $index;
-            while (!$this->isValid($proposed_num, $current) && isset($num[$index])) { 
-                $index++;
-                if ( strlen($proposed_num) === 2 && $val === 0) { 
-                    $proposed_num = $proposed_num[0];
-                } else {
-                    $proposed_num = substr($num, $index,  $step);
-                }
-            }  
-            var_dump($proposed_num);
+    protected function pushNumber($num, $proposed_num, array $current_nums) { 
+        $num = substr($num, strlen($proposed_num));
+
+
+        $current_nums[$proposed_num] = $proposed_num;
+
+        return [ $num, $current_nums ];
+    }
+    
+    protected function getProposedNumber($num,  $step, $current) { 
+        $error = false;
+        if ( (strlen($num) + count($current)  === 7) ) { 
+            $proposed_num = str_split(substr($num, 0, $step))[0];
+        } else {
+            $proposed_num = substr($num, 0,  $step);
         }
 
-        $clean_num = trim($proposed_num, "0");
 
-        return  [ $clean_num, $index, isset($init_index) ? $init_index : 0];
+        while (!$this->isValid($proposed_num, $current) ) { 
+            while (substr($num, 0, 1) === '0') { 
+                $num = substr($num, 1);
+            }
+
+            if (
+                (count($current) + ceil(strlen($num) / 2) >= 7)
+                || (strlen($num) <= 5 && count($current) == 2)
+                || (strlen($num) + count($current)  === 7)
+            ){
+                $proposed_num = str_split(substr($num, 0, $step))[0];
+            } else {
+                $proposed_num = substr($num, 0,  $step);
+            }
+
+
+            if (isset($current[$proposed_num])) { 
+                $lastTry = $proposed_num.substr($num, 1,1);
+                if ($this->isValid($lastTry, $current)) {
+                    $proposed_num = $lastTry;
+                } else {
+                    $error = true;
+                    break;
+                }
+            }
+
+        }  
+
+
+        return  $error ? false : [ $num, $proposed_num] ;
     }
 
     protected function isValid($num, $current) { 
-        return !isset($current[$num]) && (intval($num) >= 1 && intval($num) <= 59);
+        return !isset($current[$num]) && ($num >= 1 && $num <= 59);
     }
 
     protected function addNumber($current_nums) { 
